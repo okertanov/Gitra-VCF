@@ -12,7 +12,7 @@ import GitLib
 #
 # MainWindow class
 #
-class MainWindow(QtGui.QMainWindow) :
+class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
     def __init__(self):
         super(MainWindow, self).__init__()
 
@@ -26,70 +26,30 @@ class MainWindow(QtGui.QMainWindow) :
         self.InitGitWorker()
 
     #
-    # MainWindowLoggingHandler class
+    # MainWindowGitDelegate methods
     #
-    class MainWindowLoggingHandler(logging.Handler):
-        def __init__(self, level, owner):
-            logging.Handler.__init__(self, level)
-            self.owner = owner
-            pass
-        def createLock(self):
-            self.mutex = QtCore.QMutex()
-            pass
-        def acquire(self):
-            self.mutex.lock()
-            pass
-        def release(self):
-            self.mutex.unlock()
-            pass
-        def setLevel(self, level):
-            self.level = level
-            pass
-        def filter(self, record):
-            return record
-            pass
-        def flush(self):
-            pass
-        def close(self):
-            pass
-        def format(self, record):
-            logleveldict = {}
-            msg = record.getMessage()
-            fmtmsgcolor  = 'DarkSlateGray'
-            fmtloglevelcolor = 'SlateGray'
-            fmtbody = '<p><span style="color:%(loglevelcolor)s">%(loglevel)s&gt;&nbsp;</span><span style="color:%(msgcolor)s">%(message)s<span><br/></p>'
-            formatted = fmtbody % {'loglevelcolor':fmtloglevelcolor, 'msgcolor':fmtmsgcolor, 'loglevel':logging.getLevelName(record.levelno), 'message':msg}
-            return formatted
-        def emit(self, record):
-            self.owner.UiLogMessage(self.format(record))
-            pass
+    def GetLoggingEnabled(self):
+        loglevel = logging.DEBUG
+        return (True, loglevel, None, MainWindow.MainWindowLoggingHandler(logging.INFO, self))
+    def GetTopDir(self):
+        return os.path.expanduser('../')
+    def Process(self, event, data):
+        pass
+    def OnProjects(self, items):
+        map(self.AddGitProjectItem, items)
+        self.ActivateGitProjects()
+    def OnGitOutput(self):
+        pass
 
     #
-    # MainWindowGitDelegate class
+    # MainWindow methods
     #
-    class MainWindowGitDelegate(GitLib.GitLibDelegate) :
-        def __init__(self, owner):
-            super(MainWindow.MainWindowGitDelegate, self).__init__(owner)
-            pass
-        def GetLoggingEnabled(self):
-            loglevel = logging.DEBUG
-            return (True, loglevel, None, MainWindow.MainWindowLoggingHandler(logging.INFO, self.owner))
-        def GetTopDir(self):
-            return os.path.expanduser('../')
-        def Process(self, event, data):
-            pass
-        def OnProjects(self, items):
-            map(self.owner.AddGitProjectItem, items)
-            self.owner.ActivateGitProjects()
-        def OnGitOutput(self):
-            pass
-
     def InitPreferences(self):
         self.settings = QtCore.QSettings(GitLib.GITLIBAPPNAME + '.ini', QtCore.QSettings.IniFormat)
         self.settings.setValue("Geometry", self.saveGeometry())
 
     def InitGit(self):
-        self.git = GitLib.GitLib(MainWindow.MainWindowGitDelegate(self))
+        self.git = GitLib.GitLib(self)
         self.git.SetupGit();
         self.git.Version()
 
@@ -233,8 +193,11 @@ class MainWindow(QtGui.QMainWindow) :
         logEditor.setReadOnly(True)
         logEditor.setLineWrapMode(QtGui.QTextEdit.NoWrap)
         logEditor.setPlainText("Starting...")
-        logEditor.setHtml('<p><span style="color:darkblue">git&gt;</span> # On branch <span style="color:darkred">master</span><br>'
-                          '<span style="color:darkblue">git&gt;</span> nothing to commit <span style="color:grey">(working directory clean)</span><br></p>')
+        logEditor.setHtml('<p><span style="color:darkblue">'
+                          'git&gt;</span> # On branch <span style="color:darkred">master</span><br>'
+                          '<span style="color:darkblue">'
+                          'git&gt;</span> nothing to commit <span style="color:grey">(working directory clean)'
+                          '</span><br></p>')
 
         logLayout = QtGui.QVBoxLayout()
         logLayout.addWidget(logEditor)
@@ -401,3 +364,48 @@ class MainWindow(QtGui.QMainWindow) :
                 "\n\n"
                 "All rights reserved.")
         pass
+
+    #
+    # MainWindowLoggingHandler class
+    #
+    class MainWindowLoggingHandler(logging.Handler):
+        def __init__(self, level, owner):
+            logging.Handler.__init__(self, level)
+            self.owner = owner
+            pass
+        def createLock(self):
+            self.mutex = QtCore.QMutex()
+            pass
+        def acquire(self):
+            self.mutex.lock()
+            pass
+        def release(self):
+            self.mutex.unlock()
+            pass
+        def setLevel(self, level):
+            self.level = level
+            pass
+        def filter(self, record):
+            return record
+            pass
+        def flush(self):
+            pass
+        def close(self):
+            pass
+        def format(self, record):
+            logleveldict = {}
+            msg = record.getMessage()
+            fmtmsgcolor  = 'DarkSlateGray'
+            fmtloglevelcolor = 'SlateGray'
+            fmtbody = '''<p><span style="color:%(loglevelcolor)s">'
+                      %(loglevel)s&gt;&nbsp;</span>'
+                      '<span style="color:%(msgcolor)s">%(message)s<span><br/></p>'''
+            formatted = fmtbody % {'loglevelcolor':fmtloglevelcolor,
+                                   'msgcolor':fmtmsgcolor,
+                                   'loglevel':logging.getLevelName(record.levelno),
+                                   'message':msg}
+            return formatted
+        def emit(self, record):
+            self.owner.UiLogMessage(self.format(record))
+            pass
+
