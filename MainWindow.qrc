@@ -1,0 +1,31 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/" >
+        <file>resources/rescan.png</file>
+        <file>resources/gitinit.png</file>
+        <file>resources/gitclone.png</file>
+
+        <file>resources/gitstatus.png</file>
+        <file>resources/gitlog.png</file>
+        <file>resources/gitdiff.png</file>
+        <file>resources/gitconfig.png</file>
+
+        <file>resources/gitpull.png</file>
+        <file>resources/gitfetch.png</file>
+        <file>resources/gitcommit.png</file>
+        <file>resources/gitpush.png</file>
+
+        <file>resources/gitbranch.png</file>
+        <file>resources/gittag.png</file>
+        <file>resources/gitmerge.png</file>
+        <file>resources/gitrebase.png</file>
+
+        <file>resources/help.png</file>
+        <file>resources/about.png</file>
+
+        <file>resources/giticonclean.png</file>
+        <file>resources/giticonstaged.png</file>
+        <file>resources/giticonchanged.png</file>
+        <file>resources/giticonunknown.png</file>
+    </qresource>
+</RCC>
