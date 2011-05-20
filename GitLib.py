@@ -23,6 +23,7 @@ DOTGITDIR = '.git'
 #
 class GitLibDelegate(object) :
     def __init__(self, owner):
+        if not isinstance(owner, GitLibDelegate): raise TypeError
         self.__owner = owner
         pass
 
@@ -31,6 +32,7 @@ class GitLibDelegate(object) :
         return self.__owner
     @owner.setter
     def owner(self, owner):
+        if not isinstance(owner, GitLibDelegate): raise TypeError
         self.__owner = owner
 
     def GetLoggingEnabled(self):
