@@ -94,7 +94,8 @@ class MainWindow(QtGui.QMainWindow) :
         self.git.Version()
 
     def InitGitWorker(self):
-        pass
+        self.worker = GitLib.GitWorker();
+        self.worker.execute() #dry run
 
     def InitUI(self):
         self.CreateActions()
@@ -357,7 +358,8 @@ class MainWindow(QtGui.QMainWindow) :
     #Actions
     def DoRescan(self):
         self.ResetGitProjects()
-        self.git.Scan();
+        self.worker.enqueue(self.git.Scan)
+        self.worker.execute()
         pass
     def DoGitClone(self):
         pass

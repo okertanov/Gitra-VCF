@@ -3,9 +3,13 @@
 
 import os
 import sys
+import time
+import types
 import socket
 import logging
 import inspect
+import Queue
+from PyQt4 import QtCore, QtGui
 
 GITLIBAPPNAME = 'Gitra'
 GITLIBVERSION = '1.00'
@@ -70,6 +74,67 @@ class GitProjectItem(object) :
     @path.setter
     def path(self, path):
         self.__path = path
+
+#
+# GitWorker class
+#
+class GitWorker(QtCore.QThread) :
+    __pyqtSignals__ = ("sig_ready", "sig_inprogress")
+
+    def __init__(self, parent = None):
+        super(GitWorker, self).__init__(parent)
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        self.quit = False
+        self.condition = QtCore.QWaitCondition()
+        self.mutex = QtCore.QMutex()
+        self.queue = Queue.Queue()
+        self.start(QtCore.QThread.LowPriority)
+        pass
+
+    def __del__(self):
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        self.mutex.lock()
+        self.quit = True
+        self.condition.wakeOne()
+        self.mutex.unlock()
+        self.wait()
+
+    def run(self):
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        while not self.quit:
+            self.mutex.lock()
+            self.condition.wait(self.mutex)
+            while (not self.queue.empty() and not self.quit):
+                f = self.queue.get()
+                LOG.debug('GitWorker: Running for item... %s', f)
+                if (type(f) == types.MethodType or
+                    type(f) == types.BuiltinMethodType or
+                    type(f) == types.LambdaType):
+                    f()
+                self.queue.task_done()
+            self.mutex.unlock()
+            pass
+
+    def sleep(self, sec):
+        time.sleep(sec)
+
+    def enqueue(self, command):
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        self.mutex.lock()
+        self.queue.put(command)
+        self.mutex.unlock()
+        return self
+
+    def execute(self):
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        locker = QtCore.QMutexLocker(self.mutex)
+        self.condition.wakeOne()
+        return self
+
+    def block(self):
+        if not self.queue.empty():
+            self.queue.join()
+        return self
 
 #
 # GitLib class
