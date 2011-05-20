@@ -54,6 +54,12 @@ class GitLibDelegate(object) :
 # GitProjectItem class
 #
 class GitProjectItem(object) :
+    class ProjStatus:
+        Unknown, Clean, Changed, Staged, Conflicted = range(5)
+
+    class FileStatus:
+        Unknown, Unmodified, Modified, Added, Deleted, Renamed, Copied, Unmerged = range(8)
+
     def __init__(self, name = None, path = None):
         self.__name = name
         self.__path = path
