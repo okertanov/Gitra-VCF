@@ -22,18 +22,8 @@ DOTGITDIR = '.git'
 # GitLibDelegate class
 #
 class GitLibDelegate(object) :
-    def __init__(self, owner):
-        if not isinstance(owner, GitLibDelegate): raise TypeError
-        self.__owner = owner
+    def __init__(self):
         pass
-
-    @property
-    def owner(self):
-        return self.__owner
-    @owner.setter
-    def owner(self, owner):
-        if not isinstance(owner, GitLibDelegate): raise TypeError
-        self.__owner = owner
 
     def GetLoggingEnabled(self):
         raise NotImplementedError
@@ -41,13 +31,13 @@ class GitLibDelegate(object) :
     def GetTopDir(self):
         raise NotImplementedError
 
-    def Process(self, event, data):
+    def Process(self, event = None, data = None):
         raise NotImplementedError
 
-    def OnProjects(self, items):
+    def OnScanItem(self, item = None):
         raise NotImplementedError
 
-    def OnGitOutput(self):
+    def OnScanDone(self):
         raise NotImplementedError
 
 #
@@ -61,8 +51,9 @@ class GitProjectItem(object) :
         Unknown, Unmodified, Modified, Added, Deleted, Renamed, Copied, Unmerged = range(8)
 
     def __init__(self, name = None, path = None):
-        self.__name = name
-        self.__path = path
+        self.__name   = name
+        self.__path   = path
+        self.__status = GitProjectItem.ProjStatus.Unknown
 
     def __str__(self):
         return "[" + self.__name + "] : " + self.__path
@@ -82,6 +73,12 @@ class GitProjectItem(object) :
     @path.setter
     def path(self, path):
         self.__path = path
+    @property
+    def status(self):
+        return self.__status
+    @status.setter
+    def status(self, status):
+        self.__status = status
 
 #
 # GitWorker class
@@ -195,7 +192,6 @@ class GitLib() :
         pass
 
     def Scan(self, actctx = None):
-        itemsList = []
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         top = self.topdir
         for dirpath, dirnames, filenames in os.walk(top, topdown=True):
@@ -205,11 +201,13 @@ class GitLib() :
                     fullpath = os.path.split(fullgit)[0]
                     projpath, projname = os.path.split(fullpath)
                     LOG.debug('Found git project: [%s] at %s', projname, projpath)
-                    itemsList.append(GitProjectItem(projname, fullpath))
+                    item = GitProjectItem(projname, fullpath)
+                    if hasattr(self.delegate, 'OnScanItem'):
+                        self.delegate.OnScanItem(item)
                     dirnames.remove(name)
-        if hasattr(self.delegate, 'OnProjects'):
-            self.delegate.OnProjects(itemsList)
-        return itemsList
+        if hasattr(self.delegate, 'OnScanDone'):
+                        self.delegate.OnScanDone()
+        pass
 
     def Init(self, actctx = None):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())

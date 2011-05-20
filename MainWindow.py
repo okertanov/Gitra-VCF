@@ -17,13 +17,14 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         super(MainWindow, self).__init__()
 
         self.git = None
-        self.projects = None
         self.settings = None
+        self.projects = []
 
         self.InitPreferences()
+        self.InitGitWorker()
+        self.InitSignals()
         self.InitGit()
         self.InitUI()
-        self.InitGitWorker()
 
     #
     # MainWindowGitDelegate methods
@@ -33,13 +34,12 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         return (True, loglevel, None, MainWindow.MainWindowLoggingHandler(logging.INFO, self))
     def GetTopDir(self):
         return os.path.expanduser('../')
-    def Process(self, event, data):
+    def Process(self, event = None, data = None):
         pass
-    def OnProjects(self, items):
-        map(self.AddGitProjectItem, items)
-        self.ActivateGitProjects()
-    def OnGitOutput(self):
-        pass
+    def OnScanItem(self, item = None):
+        self.projects.append(item)
+    def OnScanDone(self):
+        self.emit(QtCore.SIGNAL("OnProjListItemsDone"), ())
 
     #
     # MainWindow methods
@@ -48,14 +48,17 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         self.settings = QtCore.QSettings(GitLib.GITLIBAPPNAME + '.ini', QtCore.QSettings.IniFormat)
         self.settings.setValue("Geometry", self.saveGeometry())
 
+    def InitGitWorker(self):
+        self.worker = GitLib.GitWorker();
+        self.worker.execute() #dry run
+
+    def InitSignals(self):
+        self.connect(self, QtCore.SIGNAL("OnProjListItemsDone"), self.OnProjListItemsDone)
+
     def InitGit(self):
         self.git = GitLib.GitLib(self)
         self.git.SetupGit();
         self.git.Version()
-
-    def InitGitWorker(self):
-        self.worker = GitLib.GitWorker();
-        self.worker.execute() #dry run
 
     def InitUI(self):
         self.CreateActions()
@@ -81,9 +84,10 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         self.setCentralWidget(frame)
 
         self.setWindowTitle("Gitra-VCF [" + socket.gethostname() + "]")
-        self.resize(880, 600)
+        self.resize(940, 620)
 
     def ResetGitProjects(self):
+        self.projects[:] = []
         self.listTree.hide()
         self.projList.clear()
 
@@ -114,7 +118,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         projList.setAcceptDrops(True)
         projList.setSpacing(2)
         projList.setIconSize(QtCore.QSize(48, 48))
-        projList.currentItemChanged.connect(self.ProjListItemChanged)
+        projList.currentItemChanged.connect(self.OnProjListItemChanged)
 
         projLayout = QtGui.QVBoxLayout()
         projLayout.addWidget(projList)
@@ -308,11 +312,16 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
                 triggered=self.DoAbout)
 
     #Handlers
-    def ProjListItemChanged(self, current, previous):
+    def OnProjListItemChanged(self, current, previous):
         currentItem = self.projList.currentItem()
-        itemsPath = currentItem.data(QtCore.Qt.UserRole).toString()
-        if itemsPath:
-            self.listTree.setRootIndex(self.treeModel.index(itemsPath));
+        if currentItem:
+            itemsPath = currentItem.data(QtCore.Qt.UserRole).toString()
+            if itemsPath:
+                self.listTree.setRootIndex(self.treeModel.index(itemsPath));
+
+    def OnProjListItemsDone(self):
+        map(self.AddGitProjectItem, self.projects)
+        self.ActivateGitProjects()
 
     #Events
     def showEvent(self, event):
