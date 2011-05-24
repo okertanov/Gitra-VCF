@@ -191,7 +191,7 @@ class GitLib() :
         LOG.info('Initializing %s, rev %s from %s using verbosity %s as PID %d', __name__, GitLib.Version(), os.path.split(__file__)[1], self.loglevel, os.getpid())
         pass
 
-    def Scan(self, actctx = None):
+    def Scan(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         top = self.topdir
         for dirpath, dirnames, filenames in os.walk(top, topdown=True):
@@ -209,59 +209,59 @@ class GitLib() :
                         self.delegate.OnScanDone()
         pass
 
-    def Init(self, actctx = None):
+    def Init(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Clone(self, actctx = None):
+    def Clone(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Status(self, actctx = None):
+    def Status(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Log(self, actctx = None):
+    def Log(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Diff(self, actctx = None):
+    def Diff(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Config(self, actctx = None):
+    def Config(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Pull(self, actctx = None):
+    def Pull(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Fetch(self, actctx = None):
+    def Fetch(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Commit(self, actctx = None):
+    def Commit(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Push(self, actctx = None):
+    def Push(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Branch(self, actctx = None):
+    def Branch(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Tag(self, actctx = None):
+    def Tag(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Merge(self, actctx = None):
+    def Merge(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
-    def Rebase(self, actctx = None):
+    def Rebase(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         pass
 
