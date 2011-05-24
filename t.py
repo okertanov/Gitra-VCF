@@ -55,6 +55,7 @@ class GitLibTestDelegate(GitLib.GitLibDelegate) :
 
     def Test3(self):
         self.worker = GitLib.GitWorker()
+        self.worker.sleep(1)
         self.worker.enqueue(1).enqueue(2).enqueue(3)
         self.worker.enqueue(3).enqueue(2).enqueue(1)
         self.worker.execute()
