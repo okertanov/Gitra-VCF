@@ -20,7 +20,7 @@ class GitLibTestDelegate(GitLib.GitLibDelegate) :
     def GetTopDir(self):
         return "~"
 
-    def Process(self, event = None, data = None):
+    def OnGitCommand(self, item = None):
         pass
 
     def OnScanItem(self, item = None):
@@ -37,7 +37,7 @@ class GitLibTestDelegate(GitLib.GitLibDelegate) :
     def Test0(self):
         self.GetLoggingEnabled()
         self.GetTopDir()
-        self.Process()
+        self.OnGitCommand()
         self.OnScanItem()
         self.OnScanDone()
 
@@ -68,7 +68,7 @@ class GitLibTestDelegate(GitLib.GitLibDelegate) :
 
     def Test4(self):
         #self.git.Help()
-        self.git.Status(path='../useful-unix-commands.gist')
+        self.git.Status(item=None, path='./')
         pass
 
     def RunTests(self):

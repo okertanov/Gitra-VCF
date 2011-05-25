@@ -1,6 +1,7 @@
 ##    Copyright (C) 2011 Oleg Kertanov <okertanov@gmail.com>
 ##    All rights reserved.
 
+import re
 import os
 import sys
 import time
@@ -8,6 +9,7 @@ import types
 import socket
 import logging
 import inspect
+import shlex, subprocess
 import Queue
 from PyQt4 import QtCore, QtGui
 
@@ -31,7 +33,7 @@ class GitLibDelegate(object) :
     def GetTopDir(self):
         raise NotImplementedError
 
-    def Process(self, event = None, data = None):
+    def OnGitCommand(self, item = None):
         raise NotImplementedError
 
     def OnScanItem(self, item = None):
@@ -45,7 +47,7 @@ class GitLibDelegate(object) :
 #
 class GitProjectItem(object) :
     class ProjStatus:
-        Unknown, Clean, Changed, Staged, Conflicted = range(5)
+        Unknown, Clean, Changed, Staged, Conflicted, Ahead = range(6)
 
     class FileStatus:
         Unknown, Unmodified, Modified, Added, Deleted, Renamed, Copied, Unmerged = range(8)
@@ -191,6 +193,21 @@ class GitLib() :
         LOG.info('Initializing %s, rev %s from %s using verbosity %s as PID %d', __name__, GitLib.Version(), os.path.split(__file__)[1], self.loglevel, os.getpid())
         pass
 
+    def ExecuteCmd(self, cmd, **actctx):
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        (retcode, outdata) = (-1, '')
+        try:
+            command = shlex.split(cmd)
+            path = actctx['path']
+            LOG.debug('Running command %s using parameters %s', command, actctx)
+            pipe = subprocess.Popen(command, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=path, shell=True)
+            outdata = pipe.communicate()[0]
+            retcode = pipe.returncode
+            LOG.debug('Command done with the status %d and output:\n%s', retcode, outdata)
+        except Exception as e:
+            LOG.error("%s : %s", type(e), e)
+        return (retcode, outdata)
+
     def Scan(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         top = self.topdir
@@ -219,7 +236,30 @@ class GitLib() :
 
     def Status(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
-        pass
+        try:
+            humanOutput = self.ExecuteCmd('git status', **actctx)
+            porcelainOutput = self.ExecuteCmd('git status --porcelain', **actctx)
+            reAhead = re.search('branch is ahead of (.*) by (\d+) commit', humanOutput[1])
+            aheadNum =  int(reAhead.group(2)) if reAhead else 0
+            reChanged = re.findall('^\s?([MADRCU])\s?(.*)$', porcelainOutput[1], re.MULTILINE)
+            reUnknown = re.findall('^\s?(\?)\s?(.*)$', porcelainOutput[1], re.MULTILINE)
+            LOG.debug("RE: %d - %s - %s", aheadNum, reChanged, reUnknown)
+            ## Priority to display is:
+            ##            1. Changed(actually staged & conflicted too)
+            ##            2. Staged
+            ##            3. Conflicted
+            ##            4. Ahead(Commited)
+            ##            5. Unknown
+            ##            6. Clean
+            item = actctx['item']
+            if item:
+                item.status = GitProjectItem.ProjStatus.Clean
+                item.status = GitProjectItem.ProjStatus.Unknown if reUnknown else GitProjectItem.ProjStatus.Clean
+                item.status = GitProjectItem.ProjStatus.Ahead   if aheadNum  else GitProjectItem.ProjStatus.Unknown
+                item.status = GitProjectItem.ProjStatus.Changed if reChanged else GitProjectItem.ProjStatus.Ahead
+            self.delegate.OnGitCommand(item) # fire even if none
+        except Exception as e:
+            LOG.error("%s : %s", type(e), e)
 
     def Log(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
@@ -263,5 +303,10 @@ class GitLib() :
 
     def Rebase(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        pass
+
+    def Help(self, **actctx):
+        LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        self.ExecuteCmd('git help --web git', **actctx)
         pass
 

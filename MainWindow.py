@@ -7,6 +7,7 @@ import socket
 import logging
 import inspect
 import MainWindow_rc
+from GitLib import LOG
 import GitLib
 
 #
@@ -18,7 +19,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
 
         self.git = None
         self.settings = None
-        self.projects = []
+        #self.projects = []
 
         self.InitPreferences()
         self.InitGitWorker()
@@ -34,10 +35,12 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         return (True, loglevel, None, MainWindow.MainWindowLoggingHandler(logging.INFO, self))
     def GetTopDir(self):
         return os.path.expanduser('../')
-    def Process(self, event = None, data = None):
+    def OnGitCommand(self, item = None):
+        self.emit(QtCore.SIGNAL("OnProjGitCommand"), (item))
         pass
     def OnScanItem(self, item = None):
-        self.projects.append(item)
+        #self.projects.append(item) # TODO: get rid of self.projects
+        self.emit(QtCore.SIGNAL("OnProjListItem"), (item))
     def OnScanDone(self):
         self.emit(QtCore.SIGNAL("OnProjListItemsDone"), ())
 
@@ -53,7 +56,10 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         self.worker.execute() #dry run
 
     def InitSignals(self):
+        self.connect(self, QtCore.SIGNAL("OnProjListItem"), self.OnProjListItem)
         self.connect(self, QtCore.SIGNAL("OnProjListItemsDone"), self.OnProjListItemsDone)
+
+        self.connect(self, QtCore.SIGNAL("OnProjGitCommand"), self.OnProjGitCommand)
 
     def InitGit(self):
         self.git = GitLib.GitLib(self)
@@ -61,6 +67,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         self.git.Version()
 
     def InitUI(self):
+        self.CreateUIResources()
         self.CreateActions()
         self.CreateToolBar()
         self.CreateStatusBar()
@@ -87,7 +94,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         self.resize(940, 620)
 
     def ResetGitProjects(self):
-        self.projects[:] = []
+        #self.projects[:] = []
         self.listTree.hide()
         self.projList.clear()
 
@@ -101,16 +108,19 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         qtItem.setText(item.name)
         qtItem.setData(QtCore.Qt.UserRole, item.path)
         qtItem.setData(QtCore.Qt.UserRole + 1, item)
-        qtItem.setIcon(QtGui.QIcon(":/resources/giticonunknown.png"))
+        qtItem.setIcon(self.uiicons[GitLib.GitProjectItem.ProjStatus.Unknown])
 
-        self.listTree.show()
+    def UpdateGitProjectItem(self, item):
+        qtItem = self.projList.findItems(item.name, QtCore.Qt.MatchExactly)[0]
+        if qtItem:
+            LOG.debug("UpdateGitProjectItem: %s", qtItem)
+            qtItem.setIcon(self.uiicons[item.status])
 
     def UiLogMessage(self, message):
         if hasattr(self, 'logEditor'):
             self.logEditor.moveCursor(QtGui.QTextCursor.End, QtGui.QTextCursor.MoveAnchor)
             self.logEditor.insertHtml(message)
             self.logEditor.scrollToAnchor('')
-        pass
 
     def CreateLeftPane(self):
         projList = self.projList = QtGui.QListWidget()
@@ -255,6 +265,16 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
     def CreateStatusBar(self):
         self.statusBar().showMessage("Ready")
 
+    def CreateUIResources(self):
+        self.uiicons =  {
+                            GitLib.GitProjectItem.ProjStatus.Unknown    : QtGui.QIcon(":/resources/giticonunknown.png"),
+                            GitLib.GitProjectItem.ProjStatus.Clean      : QtGui.QIcon(":/resources/giticonclean.png"),
+                            GitLib.GitProjectItem.ProjStatus.Changed    : QtGui.QIcon(":/resources/giticonchanged.png"),
+                            GitLib.GitProjectItem.ProjStatus.Staged     : QtGui.QIcon(":/resources/giticonstaged.png "),
+                            GitLib.GitProjectItem.ProjStatus.Conflicted : QtGui.QIcon(":/resources/giticonunknown.png"),
+                            GitLib.GitProjectItem.ProjStatus.Ahead      : QtGui.QIcon(":/resources/giticonunknown.png")
+                        }
+
     def CreateActions(self):
         self.RescanAction = QtGui.QAction(QtGui.QIcon(':/resources/rescan.png'), "&Rescan",
                 self, shortcut="Ctrl+R", statusTip="Rescan the projects list",
@@ -313,15 +333,22 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
 
     #Handlers
     def OnProjListItemChanged(self, current, previous):
-        currentItem = self.projList.currentItem()
-        if currentItem:
-            itemsPath = currentItem.data(QtCore.Qt.UserRole).toString()
+        currentSelection = self.projList.currentItem()
+        if currentSelection:
+            itemsPath = currentSelection.data(QtCore.Qt.UserRole).toString()
             if itemsPath:
                 self.listTree.setRootIndex(self.treeModel.index(itemsPath));
 
+    def OnProjListItem(self, item):
+        self.AddGitProjectItem(item)
+
     def OnProjListItemsDone(self):
-        map(self.AddGitProjectItem, self.projects)
+        #map(self.AddGitProjectItem, self.projects)
         self.ActivateGitProjects()
+
+    def OnProjGitCommand(self, item):
+        self.UpdateGitProjectItem(item)
+
 
     #Events
     def showEvent(self, event):
@@ -338,6 +365,11 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
     def DoGitInit(self):
         pass
     def DoGitStatus(self):
+        currentSelection = self.projList.currentItem()
+        if currentSelection:
+            item = currentSelection.data(QtCore.Qt.UserRole + 1).toPyObject()
+            LOG.debug("DoGitStatus: %s", currentSelection)
+            self.git.Status(item=item, path=item.path)
         pass
     def DoGitLog(self):
         pass
@@ -362,6 +394,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
     def DoGitRebase(self):
         pass
     def DoHelp(self):
+        self.git.Help()
         pass
     def DoAbout(self):
         QtGui.QMessageBox.about(self, "About Gitra-VCF",
