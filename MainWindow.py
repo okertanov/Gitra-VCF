@@ -113,7 +113,6 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
     def UpdateGitProjectItem(self, item):
         qtItem = self.projList.findItems(item.name, QtCore.Qt.MatchExactly)[0]
         if qtItem:
-            LOG.debug("UpdateGitProjectItem: %s", qtItem)
             qtItem.setIcon(self.uiicons[item.status])
 
     def UiLogMessage(self, message):
@@ -341,6 +340,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
 
     def OnProjListItem(self, item):
         self.AddGitProjectItem(item)
+        self.git.Status(item=item) ## TODO: move to the logic layer
 
     def OnProjListItemsDone(self):
         #map(self.AddGitProjectItem, self.projects)
@@ -368,8 +368,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         currentSelection = self.projList.currentItem()
         if currentSelection:
             item = currentSelection.data(QtCore.Qt.UserRole + 1).toPyObject()
-            LOG.debug("DoGitStatus: %s", currentSelection)
-            self.git.Status(item=item, path=item.path)
+            self.git.Status(item=item)
         pass
     def DoGitLog(self):
         pass

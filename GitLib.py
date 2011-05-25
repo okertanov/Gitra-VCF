@@ -197,12 +197,20 @@ class GitLib() :
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         (retcode, outdata) = (-1, '')
         try:
-            command = shlex.split(cmd)
-            path = actctx['path']
-            LOG.debug('Running command %s using parameters %s', command, actctx)
-            pipe = subprocess.Popen(command, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=path, shell=True)
-            outdata = pipe.communicate()[0]
-            retcode = pipe.returncode
+            #cmd = shlex.split(cmd)
+            item = actctx['item'] if 'item' in actctx else None
+            path = item.path if hasattr(item, 'path') else None
+            LOG.debug('Running command %s using parameters %s', cmd, actctx)
+            pipe = subprocess.Popen(cmd,
+                    stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    cwd=path, close_fds=True, shell=True)
+            #pipe.wait()
+            #outdata = pipe.stdout.read() #pipe.communicate()[0]
+            try:
+                outdata = pipe.communicate()[0]
+                retcode = pipe.returncode
+            except:
+                pass
             LOG.debug('Command done with the status %d and output:\n%s', retcode, outdata)
         except Exception as e:
             LOG.error("%s : %s", type(e), e)
@@ -237,6 +245,7 @@ class GitLib() :
     def Status(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         try:
+            item = actctx['item']
             humanOutput = self.ExecuteCmd('git status', **actctx)
             porcelainOutput = self.ExecuteCmd('git status --porcelain', **actctx)
             reAhead = re.search('branch is ahead of (.*) by (\d+) commit', humanOutput[1])
@@ -251,12 +260,14 @@ class GitLib() :
             ##            4. Ahead(Commited)
             ##            5. Unknown
             ##            6. Clean
-            item = actctx['item']
             if item:
                 item.status = GitProjectItem.ProjStatus.Clean
-                item.status = GitProjectItem.ProjStatus.Unknown if reUnknown else GitProjectItem.ProjStatus.Clean
-                item.status = GitProjectItem.ProjStatus.Ahead   if aheadNum  else GitProjectItem.ProjStatus.Unknown
-                item.status = GitProjectItem.ProjStatus.Changed if reChanged else GitProjectItem.ProjStatus.Ahead
+                if len(reUnknown):
+                    item.status = GitProjectItem.ProjStatus.Unknown
+                if aheadNum:
+                    item.status = GitProjectItem.ProjStatus.Ahead
+                if len(reChanged):
+                    item.status = GitProjectItem.ProjStatus.Changed
             self.delegate.OnGitCommand(item) # fire even if none
         except Exception as e:
             LOG.error("%s : %s", type(e), e)
