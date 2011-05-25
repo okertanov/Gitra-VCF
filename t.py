@@ -66,12 +66,18 @@ class GitLibTestDelegate(GitLib.GitLibDelegate) :
         self.worker.enqueue(self.git.Init).enqueue(self.git.Status).enqueue(self.git.Log).execute()
         self.worker.block()
 
+    def Test4(self):
+        #self.git.Help()
+        self.git.Status(path='../useful-unix-commands.gist')
+        pass
+
     def RunTests(self):
         test.TestInit()
         test.Test0()
         test.Test1()
         test.Test2()
         test.Test3()
+        test.Test4()
 
 if __name__ == '__main__':
     test = GitLibTestDelegate()
