@@ -19,7 +19,6 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
 
         self.git = None
         self.settings = None
-        #self.projects = []
 
         self.InitPreferences()
         self.InitGitWorker()
@@ -37,9 +36,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         return os.path.expanduser('../')
     def OnGitCommand(self, item = None):
         self.emit(QtCore.SIGNAL("OnProjGitCommand"), (item))
-        pass
     def OnScanItem(self, item = None):
-        #self.projects.append(item) # TODO: get rid of self.projects
         self.emit(QtCore.SIGNAL("OnProjListItem"), (item))
     def OnScanDone(self):
         self.emit(QtCore.SIGNAL("OnProjListItemsDone"), ())
@@ -94,13 +91,11 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         self.resize(940, 620)
 
     def ResetGitProjects(self):
-        #self.projects[:] = []
         self.listTree.hide()
         self.projList.clear()
 
     def ActivateGitProjects(self):
         self.listTree.show()
-        self.projList.show()
         self.projList.setCurrentItem(self.projList.item(0))
 
     def AddGitProjectItem(self, item):
