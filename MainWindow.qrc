@@ -23,9 +23,10 @@
         <file>resources/help.png</file>
         <file>resources/about.png</file>
 
-        <file>resources/giticonclean.png</file>
-        <file>resources/giticonstaged.png</file>
-        <file>resources/giticonchanged.png</file>
         <file>resources/giticonunknown.png</file>
+        <file>resources/giticonclean.png</file>
+        <file>resources/giticonchanged.png</file>
+        <file>resources/giticonconflicted.png</file>
+        <file>resources/giticonahead.png</file>
     </qresource>
 </RCC>

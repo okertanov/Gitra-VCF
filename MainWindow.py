@@ -264,9 +264,9 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
                             GitLib.GitProjectItem.ProjStatus.Unknown    : QtGui.QIcon(":/resources/giticonunknown.png"),
                             GitLib.GitProjectItem.ProjStatus.Clean      : QtGui.QIcon(":/resources/giticonclean.png"),
                             GitLib.GitProjectItem.ProjStatus.Changed    : QtGui.QIcon(":/resources/giticonchanged.png"),
-                            GitLib.GitProjectItem.ProjStatus.Staged     : QtGui.QIcon(":/resources/giticonstaged.png "),
-                            GitLib.GitProjectItem.ProjStatus.Conflicted : QtGui.QIcon(":/resources/giticonunknown.png"),
-                            GitLib.GitProjectItem.ProjStatus.Ahead      : QtGui.QIcon(":/resources/giticonunknown.png")
+                            GitLib.GitProjectItem.ProjStatus.Staged     : QtGui.QIcon(":/resources/giticonchanged.png "),
+                            GitLib.GitProjectItem.ProjStatus.Conflicted : QtGui.QIcon(":/resources/giticonconflicted.png"),
+                            GitLib.GitProjectItem.ProjStatus.Ahead      : QtGui.QIcon(":/resources/giticonahead.png")
                         }
 
     def CreateActions(self):
