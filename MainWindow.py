@@ -335,11 +335,17 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
 
     def OnProjListItem(self, item):
         self.AddGitProjectItem(item)
-        self.git.Status(item=item) ## TODO: move to the logic layer
+
+        ## TODO: move to the logic layer
+        lmbStatus = lambda : self.git.Status(item=item)
+        self.worker.enqueue(lmbStatus)
+        ################################
 
     def OnProjListItemsDone(self):
         #map(self.AddGitProjectItem, self.projects)
         self.ActivateGitProjects()
+        #activate statuses refresh
+        self.worker.execute()
 
     def OnProjGitCommand(self, item):
         self.UpdateGitProjectItem(item)
