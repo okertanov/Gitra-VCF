@@ -203,7 +203,7 @@ class GitLib() :
             LOG.debug('Running command %s using parameters %s', cmd, actctx)
             pipe = subprocess.Popen(cmd,
                     stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    cwd=path, close_fds=True, shell=True)
+                    cwd=path, shell=True)
             #pipe.wait()
             #outdata = pipe.stdout.read() #pipe.communicate()[0]
             try:
