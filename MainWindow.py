@@ -378,12 +378,24 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
     def DoGitConfig(self):
         pass
     def DoGitPull(self):
+        currentSelection = self.projList.currentItem()
+        if currentSelection:
+            item = currentSelection.data(QtCore.Qt.UserRole + 1).toPyObject()
+            self.git.Pull(item=item)
         pass
     def DoGitFetch(self):
+        currentSelection = self.projList.currentItem()
+        if currentSelection:
+            item = currentSelection.data(QtCore.Qt.UserRole + 1).toPyObject()
+            self.git.Fetch(item=item)
         pass
     def DoGitCommit(self):
         pass
     def DoGitPush(self):
+        currentSelection = self.projList.currentItem()
+        if currentSelection:
+            item = currentSelection.data(QtCore.Qt.UserRole + 1).toPyObject()
+            self.git.Push(item=item)
         pass
     def DoGitBranch(self):
         pass
