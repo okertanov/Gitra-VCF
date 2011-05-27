@@ -69,6 +69,9 @@ class GitLibTestDelegate(GitLib.GitLibDelegate) :
     def Test4(self):
         #self.git.Help()
         self.git.Status(item=None, path='./')
+        self.git.Fetch(item=None, path='./')
+        self.git.Pull(item=None, path='./')
+        self.git.Push(item=None, path='./')
         pass
 
     def RunTests(self):

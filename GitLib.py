@@ -286,10 +286,14 @@ class GitLib() :
 
     def Pull(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        item = actctx['item']
+        cmdOutput = self.ExecuteCmd('git pull --verbose --progress', **actctx)
         pass
 
     def Fetch(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        item = actctx['item']
+        cmdOutput = self.ExecuteCmd('git fetch --all --prune --tags --verbose --progress', **actctx)
         pass
 
     def Commit(self, **actctx):
@@ -298,6 +302,8 @@ class GitLib() :
 
     def Push(self, **actctx):
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
+        item = actctx['item']
+        cmdOutput = self.ExecuteCmd('git push --porcelain', **actctx)
         pass
 
     def Branch(self, **actctx):
