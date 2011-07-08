@@ -19,6 +19,7 @@ GITLIBORGNAME = 'espectrale.com'
 GITLIBORGDOMAIN = 'gitra.espectrale.com'
 LOG = logging.getLogger(__name__)
 DOTGITDIR = '.git'
+DOTSVNDIR = '.svn'
 
 #
 # GitLibDelegate class
@@ -95,7 +96,7 @@ class GitWorker(QtCore.QThread) :
         self.condition = QtCore.QWaitCondition()
         self.mutex = QtCore.QMutex()
         self.queue = Queue.Queue()
-        self.start(QtCore.QThread.LowPriority)
+        self.start(QtCore.QThread.HighPriority)
         pass
 
     def __del__(self):
@@ -221,15 +222,20 @@ class GitLib() :
         top = self.topdir
         for dirpath, dirnames, filenames in os.walk(top, topdown=True):
             for name in dirnames:
+                fullentry = os.path.abspath(os.path.join(dirpath, name))
+                fullpath = os.path.split(fullentry)[0]
+                LOG.debug('Scanning in: [%s]', fullpath)
                 if DOTGITDIR == name:
-                    fullgit  = os.path.abspath(os.path.join(dirpath, name))
-                    fullpath = os.path.split(fullgit)[0]
                     projpath, projname = os.path.split(fullpath)
                     LOG.debug('Found git project: [%s] at %s', projname, projpath)
                     item = GitProjectItem(projname, fullpath)
                     if hasattr(self.delegate, 'OnScanItem'):
                         self.delegate.OnScanItem(item)
                     dirnames.remove(name)
+                elif DOTSVNDIR == name:
+                    LOG.debug('SVN directory banned: [%s]', fullpath)
+                    dirnames.remove(name)
+
         if hasattr(self.delegate, 'OnScanDone'):
                         self.delegate.OnScanDone()
         pass
