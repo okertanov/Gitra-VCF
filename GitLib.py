@@ -221,21 +221,20 @@ class GitLib() :
         LOG.debug('Inside %s.%s', __name__, GitLib._fn_())
         top = self.topdir
         for dirpath, dirnames, filenames in os.walk(top, topdown=True):
-            for name in dirnames:
-                fullentry = os.path.abspath(os.path.join(dirpath, name))
-                fullpath = os.path.split(fullentry)[0]
-                LOG.debug('Scanning in: [%s]', fullpath)
-                if DOTGITDIR == name:
-                    projpath, projname = os.path.split(fullpath)
-                    LOG.debug('Found git project: [%s] at %s', projname, projpath)
-                    item = GitProjectItem(projname, fullpath)
-                    if hasattr(self.delegate, 'OnScanItem'):
-                        self.delegate.OnScanItem(item)
-                    dirnames.remove(name)
-                elif DOTSVNDIR == name:
-                    LOG.debug('SVN directory banned: [%s]', fullpath)
-                    dirnames.remove(name)
-
+            fullpath = os.path.abspath(dirpath)
+            dotgitpath = os.path.abspath(os.path.join(fullpath, DOTGITDIR))
+            dotsvnpath = os.path.abspath(os.path.join(fullpath, DOTSVNDIR))
+            LOG.debug('Scanning in: [%s]', fullpath)
+            if os.path.exists(dotgitpath):
+                projpath, projname = os.path.split(fullpath)
+                LOG.debug('Found git project: [%s] at %s', projname, projpath)
+                item = GitProjectItem(projname, fullpath)
+                if hasattr(self.delegate, 'OnScanItem'):
+                    self.delegate.OnScanItem(item)
+                del dirnames[:]
+            elif os.path.exists(dotsvnpath):
+                LOG.debug('SVN directory banned: [%s]', fullpath)
+                del dirnames[:]
         if hasattr(self.delegate, 'OnScanDone'):
                         self.delegate.OnScanDone()
         pass

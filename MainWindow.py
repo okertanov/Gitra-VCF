@@ -33,7 +33,7 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
         loglevel = logging.DEBUG
         return (True, loglevel, None, MainWindow.MainWindowLoggingHandler(logging.INFO, self))
     def GetTopDir(self):
-        return os.path.expanduser('~')
+        return os.path.expanduser('~/projects')
     def OnGitCommand(self, item = None):
         self.emit(QtCore.SIGNAL("OnProjGitCommand"), (item))
     def OnScanItem(self, item = None):
