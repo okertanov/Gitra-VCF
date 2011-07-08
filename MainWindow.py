@@ -353,7 +353,9 @@ class MainWindow(QtGui.QMainWindow, GitLib.GitLibDelegate) :
 
     #Events
     def showEvent(self, event):
-        self.DoRescan()
+        if not hasattr(self, 'is_shown'):
+            self.is_shown = True
+            self.DoRescan()
 
     #Actions
     def DoRescan(self):
